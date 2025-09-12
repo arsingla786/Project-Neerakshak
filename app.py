@@ -7,10 +7,11 @@ import pandas as pd
 from datetime import datetime
 import os
 
+# ---------------------------
 # Load the trained YOLOv8 model
+# ---------------------------
 model = YOLO("runs/detect/train/weights/best.pt")
 
-# CSV file to store results
 LOG_FILE = "detection_logs.csv"
 
 # ---------------------------
@@ -42,11 +43,11 @@ def save_results(results):
     boxes = results[0].boxes
     detected_items = []
     for box in boxes:
-        cls = int(box.cls[0])   # class id
-        conf = float(box.conf[0])  # confidence
+        cls = int(box.cls[0])
+        conf = float(box.conf[0])
         detected_items.append({"class": cls, "confidence": round(conf, 2)})
 
-    particle_count = len(boxes)  # number of detected particles
+    particle_count = len(boxes)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     df_new = pd.DataFrame([{
@@ -63,7 +64,7 @@ def save_results(results):
     st.success(f"✅ Results saved successfully! ({particle_count} particles found)")
 
 # ---------------------------
-# Upload Image Option
+# Upload Image Detection
 # ---------------------------
 st.subheader("Upload a Microscope Image")
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "png", "jpeg"])
@@ -74,11 +75,9 @@ if uploaded_file is not None:
 
     results = model.predict(img_array, conf=0.5)
     annotated = results[0].plot()
-
     annotated_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
     st.image(annotated_rgb, caption="Detection Result", width=300)
 
-    # Display number of particles
     particle_count = len(results[0].boxes)
     st.write(f"**Number of particles detected:** {particle_count}")
 
@@ -86,44 +85,48 @@ if uploaded_file is not None:
         save_results(results)
 
 # ---------------------------
-# Live Detection Option
+# Live Detection
 # ---------------------------
 st.subheader("Live Microscope Feed")
 
-run_live = st.checkbox("Start Live Detection")  # toggle live feed
+run_live = st.checkbox("Start Live Detection")
 
 if run_live:
-    cap = cv2.VideoCapture(0)  # Change to 1 if using external USB microscope
-    stframe = st.empty()
-    stcount = st.empty()
-    save_btn = st.button("Save Results (Live Detection)")
+    cap = cv2.VideoCapture(0)  # try 1 or 2 if using external camera
 
-    while run_live:
-        ret, frame = cap.read()
-        if not ret:
-            st.warning("No video feed detected. Check camera connection.")
-            break
+    if not cap.isOpened():
+        st.error("Camera could not be opened. Try changing the index (0/1/2) or check connection.")
+    else:
+        stframe = st.empty()
+        stcount = st.empty()
+        save_btn = st.button("Save Results (Live Detection)")
 
-        # Run YOLO detection
-        results = model.predict(frame, conf=0.5)
-        annotated_frame = results[0].plot()
-        annotated_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+        while run_live:
+            ret, frame = cap.read()
+            if not ret:
+                st.warning("No video feed detected. Check camera connection.")
+                break
 
-        # Display live video
-        stframe.image(annotated_rgb, channels="RGB", use_container_width=True)
+            # Run YOLO detection
+            results = model.predict(frame, conf=0.5)
+            annotated_frame = results[0].plot()
+            annotated_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
-        # Show particle count dynamically
-        particle_count = len(results[0].boxes)
-        stcount.markdown(f"**Live Particle Count:** {particle_count}")
+            # Display live video
+            stframe.image(annotated_rgb, channels="RGB", use_container_width=True)
 
-        # Save if button clicked
-        if save_btn:
-            save_results(results)
+            # Show particle count dynamically
+            particle_count = len(results[0].boxes)
+            stcount.markdown(f"**Live Particle Count:** {particle_count}")
 
-        # Check if user unchecked the box to stop
-        run_live = st.session_state.get("Start Live Detection", False)
+            # Save if button clicked
+            if save_btn:
+                save_results(results)
 
-    cap.release()
+            # Check if user unchecked the box to stop
+            run_live = st.session_state.get("Start Live Detection", False)
+
+        cap.release()
 
 # ---------------------------
 # View Saved Data
@@ -132,12 +135,12 @@ st.subheader("View Saved Data")
 if st.button("Show Detection Logs"):
     if os.path.exists(LOG_FILE):
         df = pd.read_csv(LOG_FILE)
-        st.dataframe(df)    
+        st.dataframe(df)
     else:
-        st.warning("No saved data found yet.")
-        
+        st.warning(f"No saved data found at {LOG_FILE}")
+
 # ---------------------------
-# Footer with Copyright
+# Footer
 # ---------------------------
 st.markdown(
     """
@@ -161,4 +164,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
- 
+  
