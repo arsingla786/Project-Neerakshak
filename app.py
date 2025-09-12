@@ -92,7 +92,7 @@ st.subheader("Live Microscope Feed")
 
 start_live = st.button("Start Live Detection")
 if start_live:
-    cap = cv2.VideoCapture(1)  # Adjust index for your microscope camera
+    cap = cv2.VideoCapture(0)  # Adjust index for your microscope camera
     stframe = st.empty()       # Placeholder for video
     stcount = st.empty()       # Placeholder for particle count
     save_button = st.empty()   # Placeholder for save button
