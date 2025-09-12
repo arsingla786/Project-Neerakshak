@@ -71,16 +71,25 @@ uploaded_file = st.file_uploader("Choose an image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file)
+
+    # ✅ Always convert to RGB (fixes 4 channel issue)
+    img = img.convert("RGB")
+
     img_array = np.array(img)
 
+    # Run YOLO detection
     results = model.predict(img_array, conf=0.5)
+
+    # Annotate result
     annotated = results[0].plot()
     annotated_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
     st.image(annotated_rgb, caption="Detection Result", width=300)
 
+    # Particle count
     particle_count = len(results[0].boxes)
-    st.write(f"**Number of particles detected:** {particle_count}")
+    st.write(f"*Number of particles detected:* {particle_count}")
 
+    # Save button
     if st.button("Save Results (Image Detection)"):
         save_results(results)
 
@@ -92,8 +101,8 @@ st.subheader("Live Microscope Feed")
 run_live = st.checkbox("Start Live Detection")
 
 if run_live:
-    cap = cv2.VideoCapture(2)  # try 1 or 2 if using external camera
-  
+    cap = cv2.VideoCapture(0)  # try 0, 1, or 2 depending on your camera index
+
     if not cap.isOpened():
         st.error("Camera could not be opened. Try changing the index (0/1/2) or check connection.")
     else:
@@ -107,8 +116,11 @@ if run_live:
                 st.warning("No video feed detected. Check camera connection.")
                 break
 
+            # ✅ Ensure frame is in RGB
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
             # Run YOLO detection
-            results = model.predict(frame, conf=0.5)
+            results = model.predict(frame_rgb, conf=0.5)
             annotated_frame = results[0].plot()
             annotated_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
@@ -117,7 +129,7 @@ if run_live:
 
             # Show particle count dynamically
             particle_count = len(results[0].boxes)
-            stcount.markdown(f"**Live Particle Count:** {particle_count}")
+            stcount.markdown(f"*Live Particle Count:* {particle_count}")
 
             # Save if button clicked
             if save_btn:
@@ -163,5 +175,4 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True
-)
-  
+) 
