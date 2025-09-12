@@ -23,19 +23,21 @@ st.set_page_config(page_title="Neerakshak - Microplastic Detection", page_icon="
 # ---------------------------
 col1, col2 = st.columns([1, 4])
 with col1:
-    st.image("logo.jpg", width=120)  # Place logo.png in same folder as app.py
+    st.image("logo.jpg", width=120)  # Place logo.jpg in same folder as app.py
 with col2:
     st.markdown(
         """
         <h1 style="color:#2c3e50; margin-bottom:0;">Project-Neerakshak</h1>
-        <h5 style="color:#2980b9; margin-top:5px;">Microplastic Detection with machine learning</h5>
+        <h5 style="color:#2980b9; margin-top:5px;">Microplastic Detection with Machine Learning</h5>
         """,
         unsafe_allow_html=True
     )
 
 st.markdown("---")
 
-# Function to save results
+# ---------------------------
+# Function to Save Results
+# ---------------------------
 def save_results(results):
     boxes = results[0].boxes
     detected_items = []
@@ -87,28 +89,40 @@ if uploaded_file is not None:
 # Live Detection Option
 # ---------------------------
 st.subheader("Live Microscope Feed")
-if st.button("Start Live Detection"):
-    cap = cv2.VideoCapture(1)  # Adjust based on microscope
-    stframe = st.empty()
-    stcount = st.empty()
 
-    while True:
+start_live = st.button("Start Live Detection")
+if start_live:
+    cap = cv2.VideoCapture(1)  # Adjust index for your microscope camera
+    stframe = st.empty()       # Placeholder for video
+    stcount = st.empty()       # Placeholder for particle count
+    save_button = st.empty()   # Placeholder for save button
+    stop_button = st.button("Stop Live Detection")
+
+    while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
+            st.warning("No video feed detected. Check camera connection.")
             break
 
+        # Run YOLO detection
         results = model.predict(frame, conf=0.5)
         annotated_frame = results[0].plot()
         annotated_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
+        # Show live video
         stframe.image(annotated_rgb, channels="RGB")
 
-        # Show live particle count
+        # Show particle count dynamically
         particle_count = len(results[0].boxes)
-        stcount.write(f"**Live Particle Count:** {particle_count}")
+        stcount.markdown(f"**Live Particle Count:** {particle_count}")
 
-        if st.button("Save Results (Live Detection)"):
+        # Save current frame’s results
+        if save_button.button("Save Results (Live Detection)"):
             save_results(results)
+
+        # Stop live detection
+        if stop_button:
+            break
 
     cap.release()
 
@@ -148,3 +162,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+  
