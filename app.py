@@ -90,15 +90,15 @@ if uploaded_file is not None:
 # ---------------------------
 st.subheader("Live Microscope Feed")
 
-start_live = st.button("Start Live Detection")
-if start_live:
-    cap = cv2.VideoCapture(0)  # Adjust index for your microscope camera
-    stframe = st.empty()       # Placeholder for video
-    stcount = st.empty()       # Placeholder for particle count
-    save_button = st.empty()   # Placeholder for save button
-    stop_button = st.button("Stop Live Detection")
+run_live = st.checkbox("Start Live Detection")  # toggle live feed
 
-    while cap.isOpened():
+if run_live:
+    cap = cv2.VideoCapture(0)  # Change to 1 if using external USB microscope
+    stframe = st.empty()
+    stcount = st.empty()
+    save_btn = st.button("Save Results (Live Detection)")
+
+    while run_live:
         ret, frame = cap.read()
         if not ret:
             st.warning("No video feed detected. Check camera connection.")
@@ -109,20 +109,19 @@ if start_live:
         annotated_frame = results[0].plot()
         annotated_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
-        # Show live video
-        stframe.image(annotated_rgb, channels="RGB")
+        # Display live video
+        stframe.image(annotated_rgb, channels="RGB", use_container_width=True)
 
         # Show particle count dynamically
         particle_count = len(results[0].boxes)
         stcount.markdown(f"**Live Particle Count:** {particle_count}")
 
-        # Save current frame’s results
-        if save_button.button("Save Results (Live Detection)"):
+        # Save if button clicked
+        if save_btn:
             save_results(results)
 
-        # Stop live detection
-        if stop_button:
-            break
+        # Check if user unchecked the box to stop
+        run_live = st.session_state.get("Start Live Detection", False)
 
     cap.release()
 
@@ -162,4 +161,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-  
+ 
