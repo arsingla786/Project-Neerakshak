@@ -67,11 +67,11 @@ def save_results(results):
 # Helper: Auto-detect camera
 # ---------------------------
 def open_camera():
-    for i in range(3):  # Try 0,1,2
+    for i in range(5):  # Try 0,1,2
         cap = cv2.VideoCapture(i)
         if cap.isOpened():
             return cap
-    return None
+    return None 
 
 # ---------------------------
 # Upload Image Detection
