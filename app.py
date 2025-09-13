@@ -64,6 +64,16 @@ def save_results(results):
     st.success(f"✅ Results saved successfully! ({particle_count} particles found)")
 
 # ---------------------------
+# Helper: Auto-detect camera
+# ---------------------------
+def open_camera():
+    for i in range(3):  # Try 0,1,2
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            return cap
+    return None
+
+# ---------------------------
 # Upload Image Detection
 # ---------------------------
 st.subheader("Upload a Microscope Image")
@@ -71,9 +81,7 @@ uploaded_file = st.file_uploader("Choose an image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file)
-
-    # ✅ Always convert to RGB (fixes 4 channel issue)
-    img = img.convert("RGB")
+    img = img.convert("RGB")  # ✅ Always convert to RGB
 
     img_array = np.array(img)
 
@@ -101,10 +109,10 @@ st.subheader("Live Microscope Feed")
 run_live = st.checkbox("Start Live Detection")
 
 if run_live:
-    cap = cv2.VideoCapture(2)  # try 0, 1, or 2 depending on your camera index
+    cap = open_camera()
 
-    if not cap.isOpened():
-        st.error("Camera could not be opened. Try changing the index (0/1/2) or check connection.")
+    if cap is None:
+        st.error("No camera found. Plug in the USB microscope and restart.")
     else:
         stframe = st.empty()
         stcount = st.empty()
@@ -116,7 +124,6 @@ if run_live:
                 st.warning("No video feed detected. Check camera connection.")
                 break
 
-            # ✅ Ensure frame is in RGB
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             # Run YOLO detection
@@ -175,4 +182,5 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True
-) 
+)
+ 
