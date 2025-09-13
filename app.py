@@ -6,7 +6,7 @@ from PIL import Image
 import pandas as pd
 from datetime import datetime
 import os
-
+ 
 # ---------------------------
 # Load the trained YOLOv8 model
 # ---------------------------
