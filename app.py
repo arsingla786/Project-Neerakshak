@@ -101,7 +101,7 @@ st.subheader("Live Microscope Feed")
 run_live = st.checkbox("Start Live Detection")
 
 if run_live:
-    cap = cv2.VideoCapture(1)  # try 0, 1, or 2 depending on your camera index
+    cap = cv2.VideoCapture(2)  # try 0, 1, or 2 depending on your camera index
 
     if not cap.isOpened():
         st.error("Camera could not be opened. Try changing the index (0/1/2) or check connection.")
