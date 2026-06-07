@@ -36,7 +36,7 @@ results = model.train(
 
 # Step: Evaluate on validation set
 metrics = model.val()
-print("📊 Validation metrics:", metrics)
+print("Validation metrics:", metrics)
 
 
 
